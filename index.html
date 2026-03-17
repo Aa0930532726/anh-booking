@@ -213,98 +213,157 @@
     </div>
   </div>
 
-  <script>
-    const LIFF_ID = "2008695838-Aegg7hnV";
-    const LINE_OA_ID = "@666simas";
-    let selectedCount = 1;
-    let totalPrice = 0;
-    let lineDisplayName = "";
-    let pendingLineUrl = "";
+<script>
+  const LIFF_ID = "2008695838-Aegg7hnV";
+  const LINE_OA_ID = "@666simas";
+  const API_ENDPOINT = "/.netlify/functions/notion-booking";
 
-    async function initLIFF(){
-      try{
-        await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: false });
-        if (!liff.isInClient()) return;
-        if (!liff.isLoggedIn()) { liff.login(); return; }
-        const profile = await liff.getProfile();
-        lineDisplayName = profile.displayName || "";
-        if (lineDisplayName) document.getElementById("customer-name").value = lineDisplayName;
-      }catch(err){ console.error("LIFF init error:", err); }
-    }
+  let selectedCount = 1;
+  let totalPrice = 0;
+  let lineDisplayName = "";
+  let lineUserId = "";
+  let pendingLineUrl = "";
 
-    function setMinDate(){
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, "0");
-      const dd = String(today.getDate()).padStart(2, "0");
-      const value = `${yyyy}-${mm}-${dd}`;
-      const input = document.getElementById("booking-date");
-      input.min = value;
-      if (!input.value) input.value = value;
-    }
+  async function initLIFF() {
+    try {
+      await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: false });
 
-    function calculateTotal(){
-      totalPrice = 0;
-      document.querySelectorAll(".service-checkbox:checked").forEach(cb => { totalPrice += parseInt(cb.dataset.price || "0", 10); });
-      document.getElementById("total-price").textContent = `NT$ ${totalPrice.toLocaleString()}`;
-    }
+      if (!liff.isInClient()) return;
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
 
-    function isTimeInRange(timeStr){ return !!timeStr && timeStr >= "09:00" && timeStr <= "20:00"; }
+      const profile = await liff.getProfile();
+      lineDisplayName = profile.displayName || "";
+      lineUserId = profile.userId || "";
 
-    function showToast(message, ok = true){
-      const old = document.querySelector(".toast-message");
-      if (old) old.remove();
-      const toast = document.createElement("div");
-      toast.className = "toast-message fixed top-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl text-white text-sm shadow-lg z-50";
-      toast.style.backgroundColor = ok ? "#06c755" : "#d9534f";
-      toast.textContent = message;
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.style.transition = "opacity .3s";
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 300);
-      }, 2200);
-    }
+      if (lineDisplayName) {
+        document.getElementById("customer-name").value = lineDisplayName;
+      }
+    } catch (err) {
+      console.error("LIFF init error:", err);
+    }
+  }
 
-    function showSuccessOverlay(url){
-      pendingLineUrl = url;
-      document.getElementById("success-overlay").classList.add("show");
-    }
+  function setMinDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const value = `${yyyy}-${mm}-${dd}`;
+    const input = document.getElementById("booking-date");
+    input.min = value;
+    if (!input.value) input.value = value;
+  }
 
-    document.getElementById("go-line-btn").addEventListener("click", () => {
-      if (pendingLineUrl) window.location.href = pendingLineUrl;
-    });
+  function calculateTotal() {
+    totalPrice = 0;
+    document.querySelectorAll(".service-checkbox:checked").forEach(cb => {
+      totalPrice += parseInt(cb.dataset.price || "0", 10);
+    });
+    document.getElementById("total-price").textContent = `NT$ ${totalPrice.toLocaleString()}`;
+  }
 
-    document.getElementById("person-count").addEventListener("click", (e) => {
-      const btn = e.target.closest(".count-btn");
-      if (!btn) return;
-      document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedCount = parseInt(btn.dataset.count || "1", 10);
-    });
+  function isTimeInRange(timeStr) {
+    return !!timeStr && timeStr >= "09:00" && timeStr <= "20:00";
+  }
 
-    document.querySelectorAll(".service-checkbox").forEach(cb => cb.addEventListener("change", calculateTotal));
+  function showToast(message, ok = true) {
+    const old = document.querySelector(".toast-message");
+    if (old) old.remove();
 
-    document.getElementById("submit-btn").addEventListener("click", () => {
-      const date = document.getElementById("booking-date").value;
-      const time = document.getElementById("booking-time").value;
-      const notes = (document.getElementById("notes").value || "無").trim();
-      const customer = (document.getElementById("customer-name").value || lineDisplayName || "LINE客戶").trim();
-      const selectedServices = [];
-      document.querySelectorAll(".service-checkbox:checked").forEach(cb => selectedServices.push(cb.dataset.name));
+    const toast = document.createElement("div");
+    toast.className = "toast-message fixed top-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl text-white text-sm shadow-lg z-50";
+    toast.style.backgroundColor = ok ? "#06c755" : "#d9534f";
+    toast.textContent = message;
+    document.body.appendChild(toast);
 
-      if (selectedServices.length === 0) return showToast("請選擇至少一項服務", false);
-      if (!date) return showToast("請選擇預約日期", false);
-      if (!time) return showToast("請選擇預約時間", false);
-      if (!isTimeInRange(time)) return showToast("時間需在 09:00 - 20:00", false);
+    setTimeout(() => {
+      toast.style.transition = "opacity .3s";
+      toast.style.opacity = "0";
+      setTimeout(() => toast.remove(), 300);
+    }, 2200);
+  }
 
-      const message = `【ANH髮廊｜預約申請】\n\n人數：${selectedCount} 人\n日期：${date}\n時間：${time}\n客人：${customer}\n服務：${selectedServices.join("、")}\n最低預估金額：NT$ ${totalPrice.toLocaleString()}\n備註：${notes}\n\n請耐心等候店家回覆~~~`;
-      const url = "https://line.me/R/oaMessage/" + encodeURIComponent(LINE_OA_ID) + "/?" + encodeURIComponent(message);
-      showSuccessOverlay(url);
-    });
+  function showSuccessOverlay(url) {
+    pendingLineUrl = url;
+    document.getElementById("success-overlay").classList.add("show");
+  }
 
-    window.addEventListener("load", async () => {
-      setMinDate(); calculateTotal(); await initLIFF();
-    });
-  </script>
-</body>
+  document.getElementById("go-line-btn").addEventListener("click", () => {
+    if (pendingLineUrl) window.location.href = pendingLineUrl;
+  });
+
+  document.getElementById("person-count").addEventListener("click", (e) => {
+    const btn = e.target.closest(".count-btn");
+    if (!btn) return;
+    document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedCount = parseInt(btn.dataset.count || "1", 10);
+  });
+
+  document.querySelectorAll(".service-checkbox").forEach(cb => {
+    cb.addEventListener("change", calculateTotal);
+  });
+
+  document.getElementById("submit-btn").addEventListener("click", async () => {
+    const date = document.getElementById("booking-date").value;
+    const time = document.getElementById("booking-time").value;
+    const notes = (document.getElementById("notes").value || "無").trim();
+    const customer = (document.getElementById("customer-name").value || lineDisplayName || "LINE客戶").trim();
+
+    const selectedServices = [];
+    document.querySelectorAll(".service-checkbox:checked").forEach(cb => {
+      selectedServices.push(cb.dataset.name);
+    });
+
+    if (selectedServices.length === 0) return showToast("請選擇至少一項服務", false);
+    if (!date) return showToast("請選擇預約日期", false);
+    if (!time) return showToast("請選擇預約時間", false);
+    if (!isTimeInRange(time)) return showToast("時間需在 09:00 - 20:00", false);
+    if (!lineUserId) return showToast("抓不到 LINE 使用者資料，請從 LINE 內開啟頁面", false);
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          bookingTitle: "LINE預約",
+          bookingDate: date,
+          bookingTime: time,
+          customer: customer,
+          services: selectedServices.join("、"),
+          notes: notes,
+          lineUserId: lineUserId,
+          peopleCount: selectedCount,
+          totalPrice: totalPrice
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error(data);
+        return showToast("寫入 Notion 失敗：" + (data.error || "未知錯誤"), false);
+      }
+
+      const message = `【ANH髮廊｜預約申請】\n\n人數：${selectedCount} 人\n日期：${date}\n時間：${time}\n客人：${customer}\n服務：${selectedServices.join("、")}\n最低預估金額：NT$ ${totalPrice.toLocaleString()}\n備註：${notes}\n\n請耐心等候店家回覆~~~`;
+      const url = "https://line.me/R/oaMessage/" + encodeURIComponent(LINE_OA_ID) + "/?" + encodeURIComponent(message);
+
+      showSuccessOverlay(url);
+
+    } catch (err) {
+      console.error(err);
+      showToast("系統錯誤，請稍後再試", false);
+    }
+  });
+
+  window.addEventListener("load", async () => {
+    setMinDate();
+    calculateTotal();
+    await initLIFF();
+  });
+</script>
