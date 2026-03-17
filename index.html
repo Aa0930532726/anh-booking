@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-TW" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANH 髮廊預約</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg1:#fbf6ee;--bg2:#f3e3cf;--bg3:#efe7fb;--card:rgba(255,255,255,.70);--text:#2f261f;--accent:#a98761;--accent2:#d4b286;--line:#06c755;--line2:#03b74c;--border:rgba(169,135,97,.20);--shadow:0 22px 60px rgba(136,103,68,.14);--shadow-strong:0 18px 42px rgba(136,103,68,.18);}
+    *{box-sizing:border-box} html,body{height:100%;margin:0;padding:0}
+    body{font-family:'Noto Sans TC',sans-serif;color:var(--text);background:
+      radial-gradient(circle at 10% 12%, rgba(255,255,255,.95), transparent 18%),
+      radial-gradient(circle at 85% 15%, rgba(255,235,210,.8), transparent 16%),
+      radial-gradient(circle at 18% 85%, rgba(239,232,255,.75), transparent 20%),
+      radial-gradient(circle at 92% 80%, rgba(255,248,220,.7), transparent 16%),
+      linear-gradient(140deg,var(--bg1),var(--bg2) 45%,var(--bg3));
+      background-attachment: fixed;overflow-x:hidden;}
+    .brand-font{font-family:'Cormorant Garamond',serif}
+    .aurora{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    .orb{position:absolute;border-radius:999px;filter:blur(18px);opacity:.5;animation:floaty 15s ease-in-out infinite alternate;}
+    .orb.a{width:260px;height:260px;background:rgba(255,231,197,.85);left:-60px;top:70px}
+    .orb.b{width:300px;height:300px;background:rgba(233,222,255,.7);right:-70px;top:220px;animation-duration:18s}
+    .orb.c{width:190px;height:190px;background:rgba(255,250,223,.85);left:20%;bottom:30px;animation-duration:13s}
+    .orb.d{width:180px;height:180px;background:rgba(255,226,216,.75);right:18%;bottom:120px;animation-duration:17s}
+    @keyframes floaty{from{transform:translateY(-14px) translateX(-8px) scale(1)}to{transform:translateY(18px) translateX(10px) scale(1.08)}}
+    .sparkles{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.6;background-image:
+      radial-gradient(circle at 12% 24%, rgba(255,255,255,.95) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 78% 18%, rgba(255,255,255,.85) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 86% 58%, rgba(255,255,255,.92) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 26% 73%, rgba(255,255,255,.8) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 56% 88%, rgba(255,255,255,.9) 0 1px, transparent 1.8px);animation:twinkle 4s linear infinite;}
+    @keyframes twinkle{0%,100%{opacity:.4}50%{opacity:.95}}
+    .shell{position:relative;z-index:1}
+    .glass{background:var(--card);backdrop-filter: blur(15px);-webkit-backdrop-filter: blur(15px);border:1px solid rgba(255,255,255,.62);box-shadow:var(--shadow);}
+    .hero{position:relative;overflow:hidden;background:
+      linear-gradient(135deg, rgba(255,255,255,.82), rgba(255,255,255,.36)),
+      linear-gradient(135deg, rgba(250,232,210,.28), rgba(236,229,255,.16));
+      border:1px solid rgba(255,255,255,.66);box-shadow:var(--shadow-strong);}
+    .hero:before{content:"";position:absolute;top:-80px;right:-70px;width:220px;height:220px;border-radius:999px;background:radial-gradient(circle, rgba(255,255,255,.85), transparent 70%);filter:blur(10px);opacity:.85;}
+    .tiny-badge{border:1px solid rgba(169,135,97,.18);background:rgba(255,255,255,.56);}
+    .service-checkbox:checked + label{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 12px 26px rgba(169,135,97,.24);transform:translateY(-1px);}
+    .service-checkbox:checked + label .price{color:rgba(255,255,255,.92)}
+    .count-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(169,135,97,.22);}
+    summary{list-style:none} summary::-webkit-details-marker{display:none}
+    .ring-soft:focus{outline:none;box-shadow:0 0 0 4px rgba(212,178,134,.18)}
+    .line-btn{background:linear-gradient(135deg,var(--line),var(--line2));box-shadow:0 16px 30px rgba(6,199,85,.28);}
+    .line-btn:active{transform:scale(.986)}
+    .shine{position:relative;overflow:hidden}
+    .shine:after{content:"";position:absolute;top:0;left:-140%;width:60%;height:100%;background:linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);transform:skewX(-24deg);animation:shine 4.8s linear infinite;}
+    @keyframes shine{0%{left:-140%}100%{left:160%}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    .section-card{animation:fadeUp .55s ease-out forwards;opacity:0}
+    .section-card:nth-child(1){animation-delay:.06s}.section-card:nth-child(2){animation-delay:.12s}.section-card:nth-child(3){animation-delay:.18s}.section-card:nth-child(4){animation-delay:.24s}.section-card:nth-child(5){animation-delay:.30s}.section-card:nth-child(6){animation-delay:.36s}.section-card:nth-child(7){animation-delay:.42s}
+    .hero-title{animation:titleFloat 3.2s ease-in-out infinite alternate;text-shadow:0 8px 24px rgba(169,135,97,.16);}
+    @keyframes titleFloat{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+    .footer-fade{background:linear-gradient(to top, rgba(251,246,238,1) 74%, rgba(251,246,238,0));}
+    .pulse-dot{width:8px;height:8px;border-radius:999px;background:#06c755;box-shadow:0 0 0 rgba(6,199,85,.5);animation:pulse 1.8s infinite;}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(6,199,85,.45)}70%{box-shadow:0 0 0 12px rgba(6,199,85,0)}100%{box-shadow:0 0 0 0 rgba(6,199,85,0)}}
+    .success-overlay{position:fixed;inset:0;background:rgba(23,18,12,.34);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+    .success-card{width:min(92vw, 420px);background:rgba(255,255,255,.92);border-radius:28px;padding:28px 22px;box-shadow:0 24px 60px rgba(0,0,0,.22);text-align:center;transform:scale(.9);opacity:0;}
+    .success-overlay.show{display:flex}
+    .success-overlay.show .success-card{animation:popIn .45s cubic-bezier(.2,.8,.2,1) forwards}
+    @keyframes popIn{from{opacity:0;transform:scale(.85) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .check-wrap{width:84px;height:84px;border-radius:999px;margin:0 auto 14px;background:linear-gradient(135deg,#19d86b,#06c755);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px rgba(6,199,85,.28);}
+    .check{width:28px;height:16px;border-left:5px solid #fff;border-bottom:5px solid #fff;transform:rotate(-45deg);animation:checkIn .45s .15s ease both;}
+    @keyframes checkIn{from{opacity:0;transform:scale(.7) rotate(-45deg)}to{opacity:1;transform:scale(1) rotate(-45deg)}}
+  </style>
+</head>
+<body class="h-full">
+  <div class="aurora"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div><div class="orb d"></div></div>
+  <div class="sparkles"></div>
+
+  <div class="shell w-full h-full overflow-auto">
+    <div class="max-w-lg mx-auto px-4 py-7 pb-36">
+      <header class="section-card hero rounded-[32px] p-6 text-center mb-5">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="inline-flex items-center gap-2 tiny-badge rounded-full px-3 py-1 text-[11px] tracking-widest" style="color:var(--accent)">
+            <span>ANH</span><span>•</span><span>PREMIUM BOOKING</span>
+          </div>
+          <div class="inline-flex items-center gap-2 text-[11px] px-3 py-1 rounded-full tiny-badge" style="color:var(--accent)">
+            <span class="pulse-dot"></span><span>LINE 即時預約</span>
+          </div>
+        </div>
+        <h1 class="hero-title brand-font text-5xl font-semibold tracking-[0.28em] ml-[0.28em] leading-none mb-3">A N H</h1>
+        <p class="text-sm tracking-[0.36em] ml-[0.36em]" style="color:var(--accent)">超級帥氣奶油極光預約頁</p>
+        <div class="flex items-center justify-center gap-2 mt-5 text-xs" style="color:var(--accent)">
+          <span>選服務</span><span>→</span><span>選日期</span><span>→</span><span>送出到 LINE</span>
+        </div>
+        <p class="text-xs mt-3 opacity-70">會自動帶入 LINE 顯示名稱，送出後由店家人工確認</p>
+      </header>
+
+      <section class="section-card glass rounded-3xl p-5 mb-4 shine">
+        <h2 class="text-sm font-semibold mb-4 flex items-center gap-2" style="color:var(--accent)"><span>✦</span><span>基本資料</span></h2>
+        <div class="mb-4">
+          <label class="block text-xs mb-2 opacity-70">LINE 顯示名稱</label>
+          <input id="customer-name" type="text" placeholder="會自動帶入 LINE 名字" class="w-full px-4 py-3 rounded-2xl border text-sm ring-soft" style="border-color:var(--border); background:#fff;">
+        </div>
+        <div>
+          <label class="block text-xs mb-2 opacity-70">預約人數</label>
+          <div class="grid grid-cols-4 gap-2" id="person-count">
+            <button type="button" class="count-btn rounded-2xl border py-2.5 text-sm transition active" data-count="1" style="border-color:var(--border);">1 人</button>
+            <button type="button" class="count-btn rounded-2xl border py-2.5 text-sm transition" data-count="2" style="border-color:var(--border);">2 人</button>
+            <button type="button" class="count-btn rounded-2xl border py-2.5 text-sm transition" data-count="3" style="border-color:var(--border);">3 人</button>
+            <button type="button" class="count-btn rounded-2xl border py-2.5 text-sm transition" data-count="4" style="border-color:var(--border);">4 人</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-card glass rounded-3xl p-5 mb-4">
+        <h2 class="text-sm font-semibold mb-4 flex items-center gap-2" style="color:var(--accent)"><span>✦</span><span>服務項目</span></h2>
+        <div class="space-y-3">
+          <details class="group">
+            <summary class="flex items-center justify-between px-4 py-3 rounded-2xl border cursor-pointer text-sm" style="border-color:var(--border);"><span class="text-xs font-medium opacity-80">洗髮・頭皮養護</span><span>⌄</span></summary>
+            <div class="pt-3 space-y-2">
+              <div><input type="checkbox" id="wash1" class="service-checkbox hidden" data-price="200" data-name="一般洗髮"><label for="wash1" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>一般洗髮</span><span class="price text-xs" style="color:var(--accent)">NT$200 起</span></label></div>
+              <div><input type="checkbox" id="wash2" class="service-checkbox hidden" data-price="790" data-name="健康洗髮"><label for="wash2" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>健康洗髮</span><span class="price text-xs" style="color:var(--accent)">NT$790 起</span></label></div>
+              <div><input type="checkbox" id="wash3" class="service-checkbox hidden" data-price="1590" data-name="頭皮健康環境重建護理"><label for="wash3" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>頭皮健康環境重建護理</span><span class="price text-xs" style="color:var(--accent)">NT$1590 起</span></label></div>
+            </div>
+          </details>
+
+          <details class="group">
+            <summary class="flex items-center justify-between px-4 py-3 rounded-2xl border cursor-pointer text-sm" style="border-color:var(--border);"><span class="text-xs font-medium opacity-80">護髮管理</span><span>⌄</span></summary>
+            <div class="pt-3 space-y-2">
+              <div><input type="checkbox" id="treat1" class="service-checkbox hidden" data-price="1000" data-name="基礎護髮"><label for="treat1" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>基礎護髮</span><span class="price text-xs" style="color:var(--accent)">NT$1000 起</span></label></div>
+              <div><input type="checkbox" id="treat2" class="service-checkbox hidden" data-price="1500" data-name="淨氏護髮"><label for="treat2" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>淨氏護髮</span><span class="price text-xs" style="color:var(--accent)">NT$1500 起</span></label></div>
+              <div><input type="checkbox" id="treat3" class="service-checkbox hidden" data-price="1800" data-name="黑曜光感護髮"><label for="treat3" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>黑曜光感護髮</span><span class="price text-xs" style="color:var(--accent)">NT$1800 起</span></label></div>
+              <div><input type="checkbox" id="treat4" class="service-checkbox hidden" data-price="2000" data-name="金耀煥生工程護髮"><label for="treat4" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>金耀煥生工程護髮</span><span class="price text-xs" style="color:var(--accent)">NT$2000 起</span></label></div>
+              <div><input type="checkbox" id="treat5" class="service-checkbox hidden" data-price="2000" data-name="女神護髮"><label for="treat5" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>女神護髮</span><span class="price text-xs" style="color:var(--accent)">NT$2000 起</span></label></div>
+            </div>
+          </details>
+
+          <details class="group">
+            <summary class="flex items-center justify-between px-4 py-3 rounded-2xl border cursor-pointer text-sm" style="border-color:var(--border);"><span class="text-xs font-medium opacity-80">染髮設計</span><span>⌄</span></summary>
+            <div class="pt-3 space-y-2">
+              <div><input type="checkbox" id="color1" class="service-checkbox hidden" data-price="1500" data-name="單步染"><label for="color1" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>單步染</span><span class="price text-xs" style="color:var(--accent)">NT$1500 起</span></label></div>
+              <div><input type="checkbox" id="color2" class="service-checkbox hidden" data-price="2500" data-name="雙步染（含褪色）"><label for="color2" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>雙步染（含褪色）</span><span class="price text-xs" style="color:var(--accent)">NT$2500 起</span></label></div>
+              <div><input type="checkbox" id="color3" class="service-checkbox hidden" data-price="300" data-name="頭皮隔離保護"><label for="color3" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>頭皮隔離保護</span><span class="price text-xs" style="color:var(--accent)">NT$300 起</span></label></div>
+            </div>
+          </details>
+
+          <details class="group">
+            <summary class="flex items-center justify-between px-4 py-3 rounded-2xl border cursor-pointer text-sm" style="border-color:var(--border);"><span class="text-xs font-medium opacity-80">燙髮設計</span><span>⌄</span></summary>
+            <div class="pt-3 space-y-2">
+              <div><input type="checkbox" id="perm1" class="service-checkbox hidden" data-price="1500" data-name="冷燙"><label for="perm1" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>冷燙</span><span class="price text-xs" style="color:var(--accent)">NT$1500 起</span></label></div>
+              <div><input type="checkbox" id="perm2" class="service-checkbox hidden" data-price="2000" data-name="縮毛矯正"><label for="perm2" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>縮毛矯正</span><span class="price text-xs" style="color:var(--accent)">NT$2000 起</span></label></div>
+              <div><input type="checkbox" id="perm3" class="service-checkbox hidden" data-price="2000" data-name="溫塑燙"><label for="perm3" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>溫塑燙</span><span class="price text-xs" style="color:var(--accent)">NT$2000 起</span></label></div>
+            </div>
+          </details>
+
+          <details class="group">
+            <summary class="flex items-center justify-between px-4 py-3 rounded-2xl border cursor-pointer text-sm" style="border-color:var(--border);"><span class="text-xs font-medium opacity-80">剪髮</span><span>⌄</span></summary>
+            <div class="pt-3 space-y-2">
+              <div><input type="checkbox" id="cut1" class="service-checkbox hidden" data-price="450" data-name="洗加剪（成人）"><label for="cut1" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>洗加剪（成人）</span><span class="price text-xs" style="color:var(--accent)">NT$450</span></label></div>
+              <div><input type="checkbox" id="cut2" class="service-checkbox hidden" data-price="350" data-name="洗加剪（學生）"><label for="cut2" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>洗加剪（學生）</span><span class="price text-xs" style="color:var(--accent)">NT$350</span></label></div>
+              <div><input type="checkbox" id="cut3" class="service-checkbox hidden" data-price="250" data-name="單剪髮"><label for="cut3" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>單剪髮</span><span class="price text-xs" style="color:var(--accent)">NT$250 起</span></label></div>
+              <div><input type="checkbox" id="cut4" class="service-checkbox hidden" data-price="150" data-name="學生單剪髮"><label for="cut4" class="flex justify-between items-center px-4 py-3 rounded-2xl border cursor-pointer transition text-sm" style="border-color:var(--border);"><span>學生單剪髮</span><span class="price text-xs" style="color:var(--accent)">NT$150 起</span></label></div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="section-card glass rounded-3xl p-5 mb-4">
+        <h2 class="text-sm font-semibold mb-4 flex items-center gap-2" style="color:var(--accent)"><span>✦</span><span>預約時間</span></h2>
+        <div class="mb-4">
+          <label class="block text-xs mb-2 opacity-70">日期</label>
+          <input type="date" id="booking-date" class="w-full px-4 py-3 rounded-2xl border text-sm ring-soft" style="border-color:var(--border); background:#fff;">
+        </div>
+        <div>
+          <label class="block text-xs mb-2 opacity-70">時間（09:00 - 20:00）</label>
+          <input type="time" id="booking-time" min="09:00" max="20:00" class="w-full px-4 py-3 rounded-2xl border text-sm ring-soft" style="border-color:var(--border); background:#fff;">
+        </div>
+      </section>
+
+      <section class="section-card glass rounded-3xl p-5 mb-4">
+        <h2 class="text-sm font-semibold mb-4 flex items-center gap-2" style="color:var(--accent)"><span>✦</span><span>備註</span></h2>
+        <textarea id="notes" rows="3" placeholder="髮況 / 希望色系 / 頭皮狀況 / 特殊需求" class="w-full px-4 py-3 rounded-2xl border text-sm resize-none ring-soft" style="border-color:var(--border); background:#fff;"></textarea>
+      </section>
+
+      <section class="section-card glass rounded-3xl p-5 mb-5">
+        <h2 class="text-sm font-semibold mb-3 flex items-center gap-2" style="color:var(--accent)"><span>✦</span><span>最低預估金額</span></h2>
+        <div class="text-center py-3"><span class="text-4xl font-light" id="total-price">NT$ 0</span></div>
+        <p class="text-xs text-center opacity-60">實際價格依髮長、髮量與設計難度調整</p>
+      </section>
+
+      <section class="section-card glass rounded-3xl p-5 mb-8">
+        <h2 class="text-sm font-semibold mb-3 flex items-center gap-2" style="color:var(--accent)"><span>✦</span><span>顧客須知</span></h2>
+        <ul class="text-xs space-y-2 opacity-75">
+          <li>• 送出後會直接打開官方 LINE。</li>
+          <li>• 需店家回覆「已確認」才算預約成功。</li>
+          <li>• 如需取消或改期請提前告知。</li>
+          <li>• 染燙設計建議先諮詢髮況。</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 p-4 footer-fade">
+      <div class="max-w-lg mx-auto">
+        <button id="submit-btn" class="line-btn w-full py-4 rounded-3xl text-white font-bold text-base tracking-[0.15em] shine">立即 LINE 預約</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="success-overlay" class="success-overlay">
+    <div class="success-card">
+      <div class="check-wrap"><div class="check"></div></div>
+      <h3 class="text-2xl font-bold mb-2">預約訊息已準備完成</h3>
+      <p class="text-sm text-gray-600 leading-6 mb-5">即將跳轉到官方 LINE，請再按一次送出，店家就會收到你的預約申請。</p>
+      <button id="go-line-btn" class="line-btn w-full py-4 rounded-3xl text-white font-bold text-base">前往 LINE</button>
+    </div>
+  </div>
+
+  <script>
+    const LIFF_ID = "2008695838-Aegg7hnV";
+    const LINE_OA_ID = "@666simas";
+    let selectedCount = 1;
+    let totalPrice = 0;
+    let lineDisplayName = "";
+    let pendingLineUrl = "";
+
+    async function initLIFF(){
+      try{
+        await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: false });
+        if (!liff.isInClient()) return;
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        const profile = await liff.getProfile();
+        lineDisplayName = profile.displayName || "";
+        if (lineDisplayName) document.getElementById("customer-name").value = lineDisplayName;
+      }catch(err){ console.error("LIFF init error:", err); }
+    }
+
+    function setMinDate(){
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      const value = `${yyyy}-${mm}-${dd}`;
+      const input = document.getElementById("booking-date");
+      input.min = value;
+      if (!input.value) input.value = value;
+    }
+
+    function calculateTotal(){
+      totalPrice = 0;
+      document.querySelectorAll(".service-checkbox:checked").forEach(cb => { totalPrice += parseInt(cb.dataset.price || "0", 10); });
+      document.getElementById("total-price").textContent = `NT$ ${totalPrice.toLocaleString()}`;
+    }
+
+    function isTimeInRange(timeStr){ return !!timeStr && timeStr >= "09:00" && timeStr <= "20:00"; }
+
+    function showToast(message, ok = true){
+      const old = document.querySelector(".toast-message");
+      if (old) old.remove();
+      const toast = document.createElement("div");
+      toast.className = "toast-message fixed top-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl text-white text-sm shadow-lg z-50";
+      toast.style.backgroundColor = ok ? "#06c755" : "#d9534f";
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = "opacity .3s";
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+      }, 2200);
+    }
+
+    function showSuccessOverlay(url){
+      pendingLineUrl = url;
+      document.getElementById("success-overlay").classList.add("show");
+    }
+
+    document.getElementById("go-line-btn").addEventListener("click", () => {
+      if (pendingLineUrl) window.location.href = pendingLineUrl;
+    });
+
+    document.getElementById("person-count").addEventListener("click", (e) => {
+      const btn = e.target.closest(".count-btn");
+      if (!btn) return;
+      document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedCount = parseInt(btn.dataset.count || "1", 10);
+    });
+
+    document.querySelectorAll(".service-checkbox").forEach(cb => cb.addEventListener("change", calculateTotal));
+
+    document.getElementById("submit-btn").addEventListener("click", () => {
+      const date = document.getElementById("booking-date").value;
+      const time = document.getElementById("booking-time").value;
+      const notes = (document.getElementById("notes").value || "無").trim();
+      const customer = (document.getElementById("customer-name").value || lineDisplayName || "LINE客戶").trim();
+      const selectedServices = [];
+      document.querySelectorAll(".service-checkbox:checked").forEach(cb => selectedServices.push(cb.dataset.name));
+
+      if (selectedServices.length === 0) return showToast("請選擇至少一項服務", false);
+      if (!date) return showToast("請選擇預約日期", false);
+      if (!time) return showToast("請選擇預約時間", false);
+      if (!isTimeInRange(time)) return showToast("時間需在 09:00 - 20:00", false);
+
+      const message = `【ANH髮廊｜預約申請】\n\n人數：${selectedCount} 人\n日期：${date}\n時間：${time}\n客人：${customer}\n服務：${selectedServices.join("、")}\n最低預估金額：NT$ ${totalPrice.toLocaleString()}\n備註：${notes}\n\n請耐心等候店家回覆~~~`;
+      const url = "https://line.me/R/oaMessage/" + encodeURIComponent(LINE_OA_ID) + "/?" + encodeURIComponent(message);
+      showSuccessOverlay(url);
+    });
+
+    window.addEventListener("load", async () => {
+      setMinDate(); calculateTotal(); await initLIFF();
+    });
+  </script>
+</body>
